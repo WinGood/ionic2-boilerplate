@@ -140,6 +140,7 @@
     "@types/jasmine": "2.5.40",
     "@types/lodash-es": "^4.14.2",
     "@types/node": "^7.0.0",
+    "angular2-inline-template-style": "0.2.2", 
     "angular2-template-loader": "^0.6.0",
     "awesome-typescript-loader": "^2.2.1",
     "better-npm-run": "0.0.14",
@@ -176,6 +177,7 @@
     "typescript": "2.0.9",
     "validate-commit-msg": "^2.8.0",
     "webpack": "2.2.0-rc.3",
+    "wallaby-webpack": "0.0.31",
     "xml2js": "^0.4.17"
   },
   "config": {
