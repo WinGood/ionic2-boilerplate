@@ -1,13 +1,14 @@
+const helpers = require('./helpers');
 const SSReporter = require('protractor-jasmine2-screenshot-reporter');
 
 const screenshotReporter = new SSReporter ({
     dest: 'coverage/protractor',
-    pathBuilder: function(currentSpec, suites) {
-        var name = currentSpec.fullName;
-        return name.replace(/\s+/g, '-').toLowerCase();
+    cleanDestination: true,
+    pathBuilder: function(currentSpec, suites, browserCapabilities) {
+        return browserCapabilities.get('browserName') + '/' + currentSpec.fullName;
     },
-    filename: 'index.html',
-    reportTitle: 'e2e tests'
+    filename: 'e2e-report.html',
+    reportTitle: 'E2E Tests Report'
 });
 
 exports.config = {
@@ -19,27 +20,21 @@ exports.config = {
     },
     framework: 'jasmine2',
     specs: [
-        '../src/**/**.e2e.ts',
-        '../src/**/*.e2e.ts'
+        helpers.root('src/**/**.e2e.ts'),
+        helpers.root('src/**/*.e2e.ts')
     ],
     directConnect: true,
     jasmineNodeOpts: {
         showColors: true, // If true, print colors to the terminal.
         showTiming: true,
         defaultTimeoutInterval: 30000, // Default time to wait in ms before a config fails.
-        isVerbose: true,
+        isVerbose: false,
         includeStackTrace: false
     },
     baseUrl: 'http://localhost:8090',
     allScriptsTimeout: 30000,
-    // hook into screenshotReporter's beforeLaunch
-    beforeLaunch: function() {
-        return new Promise(function(resolve){
-            screenshotReporter.beforeLaunch(resolve);
-        });
-    },
     onPrepare: function () {
-        var SpecReporter = require('jasmine-spec-reporter');
+        var SpecReporter = require('jasmine-spec-reporter').SpecReporter;
         // add jasmine spec reporter
         jasmine.getEnv().addReporter(new SpecReporter({displayStacktrace: true}));
         // Add screenshot reporter
@@ -56,8 +51,11 @@ exports.config = {
             disableWarnings: true,
             fast: true
         });
+
+        return new Promise(function(resolve){
+            screenshotReporter.beforeLaunch(resolve);
+        });
     },
-    // hook into screenshotReporter's afterLaunch
     afterLaunch: function(exitCode) {
         return new Promise(function(resolve){
             screenshotReporter.afterLaunch(resolve.bind(this, exitCode));

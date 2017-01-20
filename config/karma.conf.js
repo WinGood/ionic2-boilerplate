@@ -1,79 +1,68 @@
-'use strict';
+module.exports = (config) => {
 
-const path = require('path');
-const tsConfig = require("../tsconfig.json");
+    var testWebpackConfig = require('./webpack.test.js')({});
 
-module.exports = function karmaConfig(config) {
-    var configuration = {
+    const configuration = {
+
         // base path that will be used to resolve all patterns (e.g. files, exclude)
-        basePath: '../',
+        basePath: '',
         frameworks: ['jasmine'],
-        plugins: [
-            require('karma-jasmine'),
-            require('karma-rollup-plugin'),
-            require('karma-phantomjs-launcher'),
-            require('karma-mocha-reporter')
-            // require('karma-coverage'),
-            // require('karma-remap-coverage')
-        ],
-        reporters: ['mocha'], //'coverage', 'remap-coverage'],
-        files: ['config/karma-shim.ts'],
-        preprocessors: {'config/karma-shim.ts': ['rollup']}, //'coverage']},
-        rollupPreprocessor: {
-            // rollup settings. See Rollup documentation
-            plugins: [
-                require('rollup-plugin-angular')({
-                    exclude: 'node_modules/**'
-                }),
-                require('rollup-plugin-typescript')(Object.assign({}, tsConfig.compilerOptions, {
-                    typescript: require('../node_modules/typescript'),
-                    // sourceMap: true
-                })),
-                // require('rollup-plugin-istanbul')({
-                //     exclude: ['**/node_modules/**', '**/*.spec.ts', '**/config/**']
-                // }),
-                require('rollup-plugin-alias')({
-                    '@angular/core/testing': path.resolve(__dirname, '../node_modules/@angular/core/testing/index.js'),
-                    '@angular/platform-browser-dynamic/testing': path.resolve(__dirname, '../node_modules/@angular/platform-browser-dynamic/testing/index.js'),
-                    '@angular/compiler/testing': path.resolve(__dirname, '../node_modules/@angular/compiler/testing/index.js'),
-                    '@angular/platform-browser/testing': path.resolve(__dirname, '../node_modules/@angular/platform-browser/testing/index.js')
-                }),
-                require('rollup-plugin-commonjs')(),
-                require('rollup-plugin-node-resolve')({
-                    jsnext: true,
-                    main: true,
-                    browser: true}),
-                require('rollup-plugin-buble')()
-            ],
-            context: 'this',
-            // will help to prevent conflicts between different tests entries
-            format: 'iife',
-            // sourceMap: "inline"
+        files: [
+            {pattern: './config/karma-shim.js', watched: false},
+            { pattern: './src/assets/**/*', watched: false, included: false, served: true, nocache: false }],
+        preprocessors: { './config/karma-shim.js': ['coverage', 'webpack', 'sourcemap'] },
+        webpack: testWebpackConfig,
+        webpackMiddleware: {
+            // webpack-dev-middleware configuration
+            // i.e.
+            noInfo: true,
+            // and use stats to turn off verbose output
+            stats: {
+                // options i.e.
+                chunks: false
+            }
         },
+        reporters: [ 'mocha'],
         port: 9876,
         colors: true,
-        logLevel: config.LOG_INFO,
-        autoWatch: true,
-        browsers: ['PhantomJS'],
+        client: {
+            captureConsole: false
+        },
+        /*
+         * By default all assets are served at http://localhost:[PORT]/base/
+         */
+        proxies: {
+            "/assets/": "/base/src/assets/"
+        },
+        /*
+         * level of logging
+         * possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
+         */
+        logLevel: config.LOG_WARN,
+        // enable / disable watching file and executing tests whenever any file changes
+        autoWatch: false,
+        /*
+         * start these browsers
+         * available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
+         */
+        browsers: [
+            'PhantomJS'
+        ],
         singleRun: true
-        // coverageReporter: {
-        //     type: 'in-memory'
-        // },
-        // remapCoverageReporter: {
-        //     'text-summary': null, // to show summary in console
-        //     html: './coverage/istanbul'
-        // },
-        // coverageReporter: {
-        //     dir : 'coverage/',
-        //     subdir: 'istanbul',
-        //     reporters: [{
-        //         type: 'text'
-        //     }, {
-        //         type: 'html'
-        //     }]
-        // }
     };
+
+    if(process.env.NO_COVERAGE !== 'true') {
+        configuration.reporters.push( 'coverage', 'remap-coverage');
+        configuration.coverageReporter = {
+            type: 'in-memory'
+        };
+
+        configuration.remapCoverageReporter = {
+            'text-summary': null,
+            html: './coverage/istanbul'
+        };
+    }
+
 
     config.set(configuration);
 };
-
